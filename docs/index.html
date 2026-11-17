@@ -361,7 +361,8 @@ footer{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--muted);f
         <p>كل وحدة مرسومة بحدودها، وعليها رقمها وسعرها ومساحتها الصافية.</p>
       </div>
     </div>
-    <div class="staffwarn" id="staffwarn">التعديلات ما بتنحفظ من هذا الحساب لأنه ما عنده صلاحية تعديل على الصفحة. اطلب من صاحب الصفحة يضيفك من زر Share بصلاحية تعديل.</div>
+    <div class="staffwarn" id="staffwarn"><span id="warnTxt">التعديلات ما بتنحفظ من هذا الحساب لأنه ما عنده صلاحية تعديل على الصفحة. اطلب من صاحب الصفحة يضيفك من زر Share بصلاحية تعديل.</span>
+      <form id="tokF" hidden style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input id="tokIn" type="password" autocomplete="off" placeholder="الصق مفتاح التعديل هنا" aria-label="مفتاح التعديل" style="flex:1;min-width:200px;background:var(--ink);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:9px 12px;direction:ltr"><button type="submit" style="background:var(--bronze);color:#1a1409;border:0;border-radius:10px;padding:0 16px;font-weight:600">حفظ المفتاح</button></form></div>
     <div class="bar">
       <div class="seg" id="floorSeg" role="group" aria-label="الدور"></div>
       <div class="stage-tools"><div class="seg sm" id="avSeg" role="group" aria-label="الحالة"></div><div class="seg sm" id="bedSeg" role="group" aria-label="عدد غرف النوم"></div></div>
@@ -871,6 +872,7 @@ function setRole(r){
   const sb=$('#staffbar'); sb.classList.toggle('on',!!r); sb.classList.toggle('cl',r==='client'); sb.querySelector('b').textContent=staff?'وضع الموظف':'وضع العميل';
   $('#editBtn').classList.toggle('show',staff&&!!dbRef);
   $('#staffwarn').classList.toggle('on',staff&&!!dbRef&&canWrite===false);
+  if(GHMODE){$('#tokF').hidden=!(staff&&canWrite===false);$('#tokF').style.display=$('#tokF').hidden?'none':'flex';}
   if(!staff&&editing)$('#editBtn').click();
   if(openState&&cur){renderUvStatus();renderPedit();$('#uvPrice').innerHTML=priceInner(cur)}
 }
@@ -900,7 +902,7 @@ async function save(code,undo,msg){
   const body={s:ST[code]||'available',at:Date.now()}; if(PR[code]!=null)body.price=PR[code];
   writing[code]=dbRef.doc(code).set(body).then(()=>toast(msg)).catch(e=>{undo();applyPrices();applyStatus();
     if(openState&&cur&&cur.code===code){$('#uvPrice').innerHTML=priceInner(cur);renderPedit()}
-    if(e&&e.code==='invalid_argument'){$('#staffwarn').classList.add('on');toast('ما انحفظ: حسابك ما عنده صلاحية تعديل')}
+    if(e&&e.code==='invalid_argument'){if(GHMODE){canWrite=false;setRole(role)}else $('#staffwarn').classList.add('on');toast('ما انحفظ: ما عندك صلاحية تعديل')}
     else toast('ما انحفظ التغيير، حاول مرة ثانية')}).finally(()=>{writing[code]=null});
 }
 function setSt(code,s){const prev=ST[code]||'available';if(prev===s)return;ST[code]=s;save(code,()=>{ST[code]=prev},`${code}: ${s==='reserved'?'محجوزة':'متاحة'}`)}
@@ -915,6 +917,71 @@ function applyPrices(){
 function toggleSt(code){setSt(code,isRes(code)?'available':'reserved')}
 $('#editBtn').addEventListener('click',e=>{editing=!editing;e.currentTarget.setAttribute('aria-pressed',editing);canvas.classList.toggle('editing',editing);
   $('#hint').textContent=editing?'اضغط على الوحدة لتبديل حالتها':'اضغط على أي وحدة لفتح مخططها';});
+function applyRemote(entries){
+  for(const k in ST)delete ST[k]; for(const k in PR)delete PR[k];
+  entries.forEach(([id,v])=>{if(!BY[id]||!v||typeof v!=='object')return;if(v.s==='reserved')ST[id]='reserved';
+    if(typeof v.price==='number'&&isFinite(v.price)&&v.price>=10000&&v.price<=1e8)PR[id]=Math.round(v.price)});
+  applyPrices(); if(openState&&cur){$('#uvPrice').innerHTML=priceInner(cur);if(!(document.activeElement&&document.activeElement.id==='pin'))renderPedit()}
+  stReady=true; applyStatus(); applyFilter();
+}
+
+/* ---- GitHub backend (when the page runs outside Claude, e.g. GitHub Pages) ---- */
+const GHMODE=!(window.claude&&claude.use);
+const GH={owner:'StSt2024',repo:'may-residence',path:'docs/status.json',branch:'main'};
+const GHAPI=`https://api.github.com/repos/${GH.owner}/${GH.repo}`;
+let ghTok=null; try{ghTok=localStorage.getItem('may-gh-token')}catch(e){}
+const b64e=s=>btoa(unescape(encodeURIComponent(s))), b64d=s=>decodeURIComponent(escape(atob(s.replace(/\n/g,''))));
+const ghH=()=>({Accept:'application/vnd.github+json',...(ghTok?{Authorization:'Bearer '+ghTok}:{})});
+let lastJSON='';
+async function ghRead(){
+  if(ghTok){
+    const r=await fetch(`${GHAPI}/contents/${GH.path}?ref=${GH.branch}&t=${Date.now()}`,{headers:ghH(),cache:'no-store'});
+    if(r.status===404)return {data:{units:{}},sha:null};
+    if(!r.ok)throw r.status;
+    const j=await r.json(); return {data:JSON.parse(b64d(j.content)),sha:j.sha};
+  }
+  const r=await fetch('status.json?t='+Date.now(),{cache:'no-store'});
+  if(r.status===404)return {data:{units:{}}};
+  if(!r.ok)throw r.status; return {data:await r.json()};
+}
+function ghApply(d){const u=(d&&d.units)||{};const s=JSON.stringify(u);if(s===lastJSON&&stReady)return;lastJSON=s;applyRemote(Object.entries(u))}
+let ghQ=Promise.resolve();
+function ghWrite(code,body){
+  const job=ghQ.then(async()=>{
+    if(!ghTok)throw {code:'invalid_argument'};
+    for(let attempt=0;attempt<3;attempt++){
+      const {data,sha}=await ghRead(); data.units=data.units||{}; data.units[code]=body; data.updated=new Date().toISOString();
+      const r=await fetch(`${GHAPI}/contents/${GH.path}`,{method:'PUT',headers:{...ghH(),'Content-Type':'application/json'},
+        body:JSON.stringify({message:`${code}: ${body.s==='reserved'?'محجوزة':'متاحة'}${body.price?' · '+body.price:''}`,content:b64e(JSON.stringify(data,null,1)),branch:GH.branch,...(sha?{sha}:{})})});
+      if(r.ok){lastJSON=JSON.stringify(data.units);return}
+      if(r.status===401||r.status===403||r.status===404)throw {code:'invalid_argument'};
+      if(r.status!==409&&r.status!==422)throw {code:'unavailable'};
+    }
+    throw {code:'unavailable'};
+  });
+  ghQ=job.catch(()=>{}); return job;
+}
+async function ghCheckToken(t){
+  const r=await fetch(GHAPI,{headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+t}});
+  if(!r.ok)return false; const j=await r.json(); return !!(j.permissions&&j.permissions.push);
+}
+if(GHMODE){
+  dbRef={doc:code=>({set:body=>ghWrite(code,body)})};
+  canWrite=ghTok?null:false;
+  const poll=async()=>{try{ghApply((await ghRead()).data)}catch(e){if(!stReady)toast('تعذّر تحميل حالة الوحدات حاليًا')}};
+  poll(); setInterval(()=>{if(!document.hidden)poll()},ghTok?20000:60000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+  if(ghTok)ghCheckToken(ghTok).then(ok=>{canWrite=ok?true:false;if(!ok){ghTok=null;try{localStorage.removeItem('may-gh-token')}catch(e){}}setRole(role)}).catch(()=>{});
+  $('#warnTxt').textContent='عشان تنحفظ تعديلاتك ويشوفها العملاء، أضف مفتاح التعديل مرة وحدة على هذا الجهاز (تاخذه من سلطان).';
+  $('#tokF').addEventListener('submit',async e=>{e.preventDefault();const t=$('#tokIn').value.trim();if(!t)return;
+    const b=e.target.querySelector('button');b.disabled=true;b.textContent='جاري التحقق…';
+    let ok=false;try{ok=await ghCheckToken(t)}catch(_){}
+    b.disabled=false;b.textContent='حفظ المفتاح';
+    if(ok){ghTok=t;try{localStorage.setItem('may-gh-token',t)}catch(_){}canWrite=true;$('#tokIn').value='';setRole(role);toast('تم، تقدر الحين تعدّل والتعديلات توصل للعملاء')}
+    else toast('المفتاح غير صحيح أو ما عنده صلاحية على المستودع')});
+  setTimeout(()=>setRole(role));
+}
+
 (async()=>{
   if(!window.claude||!claude.use)return;
   const [db,user]=await Promise.all([claude.use('db'),claude.use('user')]);
@@ -922,12 +989,8 @@ $('#editBtn').addEventListener('click',e=>{editing=!editing;e.currentTarget.setA
   dbRef=db.collection('units');
   const timer=setTimeout(()=>{if(!stReady)toast('تعذّر تحميل حالة الوحدات حاليًا')},10000);
   dbRef.onSnapshot(snap=>{
-    for(const k in ST)delete ST[k]; for(const k in PR)delete PR[k];
-    snap.docs.forEach(d=>{const v=d.data();if(!BY[d.id]||!v)return;if(v.s==='reserved')ST[d.id]='reserved';
-      if(typeof v.price==='number'&&isFinite(v.price)&&v.price>=10000&&v.price<=1e8)PR[d.id]=Math.round(v.price)});
-    applyPrices(); if(openState&&cur){$('#uvPrice').innerHTML=priceInner(cur);if(!(document.activeElement&&document.activeElement.id==='pin'))renderPedit()}
+    applyRemote(snap.docs.map(d=>[d.id,d.data()]));
     if(!snap.metadata.fromCache){clearTimeout(timer)}
-    stReady=true; applyStatus(); applyFilter();
   },()=>{clearTimeout(timer)});
   if(user){canWrite=await user.canEdit();}
   setRole(role);
