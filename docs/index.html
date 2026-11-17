@@ -972,7 +972,7 @@ if(GHMODE){
   poll(); setInterval(()=>{if(!document.hidden)poll()},ghTok?20000:60000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
   if(ghTok)ghCheckToken(ghTok).then(ok=>{canWrite=ok?true:false;if(!ok){ghTok=null;try{localStorage.removeItem('may-gh-token')}catch(e){}}setRole(role)}).catch(()=>{});
-  $('#warnTxt').textContent='عشان تنحفظ تعديلاتك ويشوفها العملاء، أضف مفتاح التعديل مرة وحدة على هذا الجهاز (تاخذه من سلطان).';
+  $('#warnTxt').textContent='عشان تنحفظ تعديلاتك ويشوفها العملاء، أضف مفتاح التعديل مرة وحدة على هذا الجهاز (تاخذه من فريق الدعم).';
   $('#tokF').addEventListener('submit',async e=>{e.preventDefault();const t=$('#tokIn').value.trim();if(!t)return;
     const b=e.target.querySelector('button');b.disabled=true;b.textContent='جاري التحقق…';
     let ok=false;try{ok=await ghCheckToken(t)}catch(_){}
