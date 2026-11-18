@@ -670,8 +670,8 @@ function fillUnit(u,dir){
       <div class="tile"><b>${u.baths}</b><span>دورات المياه</span></div>
       <div class="tile"${u.total?'':' style="grid-column:1/-1"'}><b>${ar(u.sale)} <small>م²</small></b><span>المساحة الصافية</span></div>
       ${u.total?`<div class="tile"><b>${ar(u.total)} <small>م²</small></b><span>المساحة الإجمالية</span></div>`:''}
-      ${u.park?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>الموقف</span><b style="font-size:17px">${parkTxt(u)}</b></div>`:''}
       ${u.ext?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>منطقة خاصة (خارجية)</span><b>${u.ext.reduce((a,e)=>a+e.area,0).toFixed(2)} <small>م²</small></b></div>`:''}
+      ${u.park?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>الموقف</span><b style="font-size:17px">${parkTxt(u)}</b></div>`:''}
     </div>
     <h3>جدول مساحات الفراغات <span>م²</span></h3>
     <ul class="rooms num" id="rooms">${u.rooms.map((r,i)=>`<li data-n="${i+1}"><i>${i+1}</i><span>${r.name}</span><em>${r.area.toFixed(2)}</em></li>`).join('')}
