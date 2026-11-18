@@ -876,6 +876,7 @@ async function printUnit(u){
     else toast('ما قدرت أجهّز الملف، حاول مرة ثانية');
   }finally{const b=$('#printBtn');if(b){b.disabled=false;b.querySelector('.lbl').textContent='طباعة المخطط والبيانات'}}
 }
+if(!(window.claude&&claude.use)){dlNS={save:async({filename,data})=>{const url=URL.createObjectURL(data);const l=document.createElement('a');l.href=url;l.download=filename;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);return{status:'saved'}}};setTimeout(()=>document.querySelectorAll('.pwrap').forEach(p=>p.hidden=false));}
 (async()=>{if(!window.claude||!claude.use)return;dlNS=await claude.use('downloads');if(dlNS)document.querySelectorAll('.pwrap').forEach(p=>p.hidden=false)})();
 
 /* ---- entry gate ---- */
