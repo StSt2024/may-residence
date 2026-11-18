@@ -790,8 +790,8 @@ async function buildSheet(u){
   c.direction='ltr'; txt(u.code,285-c.measureText('مخطط الشقة').width/K-3,20.5,F('700',9,DF),INK,'right'); c.direction='rtl';
   txt(`${FN[u.floor]} · ${BN[u.b]} · ${bedsTxt(u.beds)}`,285,29,F('400',3.6),MU);
   // logo (top-left)
-  try{const li=await logoImg();const lgH=17,lgW=lgH*243.05/75.97;c.drawImage(li,12*K,6*K,lgW*K,lgH*K);
-    c.direction='ltr';txt('107-2',12+55*lgH/75.97,6+64.37*lgH/75.97,F('400',21.57*lgH/75.97,DF),'#b07a52','left');c.direction='rtl';}catch(e){}
+  try{const li=await logoImg();const lgH=12,lgW=lgH*243.05/75.97;c.drawImage(li,12*K,8*K,lgW*K,lgH*K);
+    c.direction='ltr';txt("107-2",12+55*lgH/75.97,8+64.37*lgH/75.97,F('400',21.57*lgH/75.97,DF),'#b07a52','left');c.direction='rtl';}catch(e){}
   const hx=12;
   txt(new Date().toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{year:'numeric',month:'long',day:'numeric'}),hx,29,F('400',3),MU,'left');
   c.fillStyle=BR; c.fillRect(12*K,34*K,273*K,.5*K);
