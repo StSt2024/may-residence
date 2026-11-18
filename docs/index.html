@@ -344,12 +344,12 @@ footer{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--muted);f
     <div>
       <div class="eyebrow reveal">مخططات الشقق · قائمة الأسعار</div>
       <h1 class="reveal" style="animation-delay:.08s">اختر شقتك <em>من المخطط</em> مباشرة</h1>
-      <p class="lead reveal" style="animation-delay:.16s">ثلاثة مبانٍ وأربعة أدوار. مرّر على أي وحدة في المخطط لتشوف سعرها ومساحتها، واضغط عليها لتفتح مخططها الكامل مع جدول المساحات.</p>
+      <p class="lead reveal" style="animation-delay:.16s">ستة مبانٍ وأربعة أدوار. مرّر على أي وحدة في المخطط لتشوف سعرها ومساحتها، واضغط عليها لتفتح مخططها الكامل مع جدول المساحات.</p>
       <div class="stats reveal num" style="animation-delay:.24s" id="stats"></div>
       <a class="cta reveal" style="animation-delay:.32s" href="#explore">استعرض المخططات
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2v12M3 9l5 5 5-5"/></svg></a>
     </div>
-    <div class="hero-vis reveal" style="animation-delay:.2s" id="heroVis"><div class="cap">الدور الأرضي · 3 مبانٍ · 36 شقة</div></div>
+    <div class="hero-vis reveal" style="animation-delay:.2s" id="heroVis"><div class="cap">الدور الأرضي · 6 مبانٍ · 36 شقة</div></div>
   </div>
 </header>
 
@@ -446,7 +446,8 @@ U.forEach(u=>u.tot=Math.round(((u.gross!=null?u.gross:u.net))*100)/100);
 const BY={}; U.forEach((u,i)=>{u.i=i;BY[u.code]=u});
 const FLOORS=[['G','الأرضي','الدور الأرضي'],['1','الأول','الدور الأول'],['2','الثاني','الدور الثاني'],['R','الملحق','الملحق العلوي']];
 const FN=Object.fromEntries(FLOORS.map(f=>[f[0],f[2]]));
-const BN=['المبنى 1','المبنى 2','المبنى 3'];
+const BN=['A1 · A2','B1 · B2','C1 · C2'];
+const bnOf=u=>'مبنى '+u.bn;
 const COL={1:'var(--b1)',2:'var(--b2)',3:'var(--b3)'};
 const COLHEX={1:'#7fa39b',2:'#c49a62',3:'#c47a5a'};
 const fmt=n=>n.toLocaleString('en-US');
@@ -468,7 +469,7 @@ if(innerWidth<700) state.bld=0;
 const prices=U.map(u=>u.price), nets=U.map(u=>u.net);
 function renderStats(){const av=U.filter(u=>!isRes(u.code)).length;const prices=U.map(u=>u.price);
 $('#stats').innerHTML=[
-  [U.length,'شقة'],[stReady?av:'—','متاحة'],[3,'مبانٍ'],
+  [U.length,'شقة'],[stReady?av:'—','متاحة'],[6,'مبانٍ'],
   ['<bdi dir="ltr">'+Math.floor(Math.min(...prices)/1000)+'–'+Math.round(Math.max(...prices)/1000)+'</bdi> ألف','نطاق الأسعار (ريال)']
 ].map(([b,s])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');}
 renderStats();
@@ -500,7 +501,7 @@ function seg(el,items,cur,onPick){
 const setFloorSeg=seg($('#floorSeg'),FLOORS.map(f=>[f[0],`${f[1]}<small class="num">${U.filter(u=>u.floor===f[0]).length}</small>`]),state.floor,v=>{if(v!==state.floor)showFloor(v)});
 seg($('#avSeg'),[[0,'كل الحالات'],[1,'المتاحة فقط']],0,v=>{state.av=+v;applyFilter()});
 seg($('#bedSeg'),[[0,'كل الشقق'],[1,'غرفة'],[2,'غرفتين'],[3,'3 غرف']],0,v=>{state.beds=+v;applyFilter()});
-const setBldSeg=seg($('#bldSeg'),[[-1,'كل المباني'],[0,'مبنى 1'],[1,'مبنى 2'],[2,'مبنى 3']],state.bld,v=>{state.bld=+v;zoomTo(+v);markBld()});
+const setBldSeg=seg($('#bldSeg'),[[-1,'كل المباني'],[0,'A1 · A2'],[1,'B1 · B2'],[2,'C1 · C2']],state.bld,v=>{state.bld=+v;zoomTo(+v);markBld()});
 
 /* ---- floor rendering ---- */
 const canvas=$('#canvas'); let svg=null, curVB=null;
@@ -524,7 +525,7 @@ function buildFloor(f){
       <text class="p num" data-p="${fmt(u.price)}" y="${s*.45}" font-size="${s*.95}" stroke-width="${s*.3}">${fmt(u.price)}</text>
       <text class="a num" y="${s*1.6}" font-size="${s*.8}" stroke-width="${s*.28}">${fa(u.tot)} م²</text></g></g>`;
   });
-  const bl=fl.buildings.map((b,i)=>`<text class="bl" x="${b[0]+b[2]/2}" y="${fl.vb[1]+fl.vb[3]+9}">${BN[i]}</text>`).join('');
+  const bl=fl.halves.map(hv=>`<text class="bl" direction="ltr" x="${hv.x}" y="${fl.vb[1]+fl.vb[3]+9}">${hv.n}</text>`).join('');
   g.innerHTML=`<defs><pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#262b32"/><rect width="1.3" height="4" fill="#5d636c"/></pattern></defs><path class="ft" d="${fl.foot}" fill-rule="evenodd"/><g>${polys}</g><path class="wl" d="${fl.walls}" fill-rule="evenodd"/><g>${labels}</g>${bl}`;
   return g;
 }
@@ -582,7 +583,7 @@ function applyStatus(){
 
 /* ---- tooltip ---- */
 const tip=$('#tip');
-function tipHTML(u){const r=isRes(u.code);return `<div class="t1"><b>${u.code}</b><span>${FN[u.floor]} · ${BN[u.b]}</span></div>
+function tipHTML(u){const r=isRes(u.code);return `<div class="t1"><b>${u.code}</b><span>${FN[u.floor]} · ${bnOf(u)}</span></div>
   ${stReady?`<div style="margin-top:8px"><span class="st ${r?'rs':'av'}">${r?'محجوزة':'متاحة'}</span></div>`:''}
   <div class="pr num" ${r?'style="text-decoration:line-through;opacity:.6"':''}>${fmt(u.price)}<small>ريال</small></div>
   <dl class="num"><dt>غرف النوم</dt><dd>${u.beds}</dd><dt>دورات المياه</dt><dd>${u.baths}</dd><dt>المساحة الإجمالية</dt><dd>${fa(u.tot)} م²</dd><dt>المساحة البيعية</dt><dd>${u.sale.toFixed(2)} م²</dd>${u.ext?`<dt>${u.ext.map(e=>e.name).join(' + ')} (خارجي)</dt><dd>${u.ext.reduce((a,e)=>a+e.area,0).toFixed(2)} م²</dd>`:''}</dl>
@@ -606,7 +607,7 @@ function shapeSVG(u){
   return `<svg class="shape" viewBox="${x-(m-w)/2-2} ${y-(m-h)/2-2} ${m+4} ${m+4}" aria-hidden="true"><polygon points="${p.poly.map(q=>q.join(',')).join(' ')}"/></svg>`;
 }
 cardsEl.innerHTML=U.map(u=>`<button class="card" data-code="${u.code}" style="--c:${COL[u.beds]}">
-  <div class="cd num">${u.code}</div>${shapeSVG(u)}<div class="fl">${FN[u.floor]} · ${BN[u.b]}</div>
+  <div class="cd num">${u.code}</div>${shapeSVG(u)}<div class="fl">${FN[u.floor]} · ${bnOf(u)}</div>
   <div class="pr num">${fmt(u.price)} <small>ريال</small></div>
   <div class="meta num"><span>${bedsTxt(u.beds)}</span><span>${u.baths} دورات مياه</span><span>${fa(u.tot)} م²</span></div><span class="st av" hidden>متاحة</span></button>`).join('');
 const cardEls=Object.fromEntries([...cardsEl.children].map(c=>[c.dataset.code,c]));
@@ -643,14 +644,14 @@ function renderPedit(){
 }
 function fillUnit(u,dir){
   uv.style.setProperty('--c',COLHEX[u.beds]);
-  $('#crumb').innerHTML=`${FN[u.floor]} · ${BN[u.b]} · <b>شقة ${u.code}</b>`;
+  $('#crumb').innerHTML=`${FN[u.floor]} · ${bnOf(u)} · <b>شقة ${u.code}</b>`;
   const s=seq(u),k=s.indexOf(u); $('#prev').disabled=k<=0; $('#next').disabled=k>=s.length-1;
   const loc=F[u.floor], lvb=bldVB(u.floor,u.b);
   const sum=u.rooms.reduce((a,r)=>a+r.area,0);
   side.innerHTML=`<div class="stg">
     <div class="eyebrow">مخطط الشقة · ${FN[u.floor]}</div>
     <h2 id="uvCode" class="num">${u.code}</h2>
-    <div class="sub">${BN[u.b]} · ${bedsTxt(u.beds)}</div>
+    <div class="sub">${bnOf(u)} · ${bedsTxt(u.beds)}</div>
     <div class="uv-status" id="uvSt"></div>
     <div class="price" id="uvPrice">${priceInner(u)}</div>
     <div id="uvPedit"></div>
@@ -788,7 +789,7 @@ async function buildSheet(u){
   // header
   txt('مخطط الشقة',285,19,F('500',4.2),BR);
   c.direction='ltr'; txt(u.code,285-c.measureText('مخطط الشقة').width/K-3,20.5,F('700',9,DF),INK,'right'); c.direction='rtl';
-  txt(`${FN[u.floor]} · ${BN[u.b]} · ${bedsTxt(u.beds)}`,285,29,F('400',3.6),MU);
+  txt(`${FN[u.floor]} · ${bnOf(u)} · ${bedsTxt(u.beds)}`,285,29,F('400',3.6),MU);
   // logo (top-left)
   try{const li=await logoImg();const lgH=12,lgW=lgH*243.05/75.97;c.drawImage(li,12*K,8*K,lgW*K,lgH*K);
     c.direction='ltr';txt("107-2",12+55*lgH/75.97,8+64.37*lgH/75.97,F('400',21.57*lgH/75.97,DF),'#b07a52','left');c.direction='rtl';}catch(e){}
