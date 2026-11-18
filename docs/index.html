@@ -445,6 +445,7 @@ footer{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--muted);f
 const D=window.DATA, U=D.units, F=D.floors, F_=D.floors;
 U.forEach(u=>u.tot=u.sale);
 const ar=n=>String(Math.round(n*100)/100);
+const parkTxt=u=>u.park==='basement'?'موقف في القبو':u.park==='outdoor'?'موقف خارجي':'';
 const BY={}; U.forEach((u,i)=>{u.i=i;BY[u.code]=u});
 const FLOORS=[['G','الأرضي','الدور الأرضي'],['1','الأول','الدور الأول'],['2','الثاني','الدور الثاني'],['R','الملحق','الملحق العلوي']];
 const FN=Object.fromEntries(FLOORS.map(f=>[f[0],f[2]]));
@@ -669,6 +670,7 @@ function fillUnit(u,dir){
       <div class="tile"><b>${u.baths}</b><span>دورات المياه</span></div>
       <div class="tile"${u.total?'':' style="grid-column:1/-1"'}><b>${ar(u.sale)} <small>م²</small></b><span>المساحة الصافية</span></div>
       ${u.total?`<div class="tile"><b>${ar(u.total)} <small>م²</small></b><span>المساحة الإجمالية</span></div>`:''}
+      ${u.park?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>الموقف</span><b style="font-size:17px">${parkTxt(u)}</b></div>`:''}
       ${u.ext?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>منطقة خاصة (خارجية)</span><b>${u.ext.reduce((a,e)=>a+e.area,0).toFixed(2)} <small>م²</small></b></div>`:''}
     </div>
     <h3>جدول مساحات الفراغات <span>م²</span></h3>
@@ -798,7 +800,7 @@ async function buildSheet(u){
   // header
   txt('مخطط الشقة',285,19,F('500',4.2),BR);
   c.direction='ltr'; txt(u.code,285-c.measureText('مخطط الشقة').width/K-3,20.5,F('700',9,DF),INK,'right'); c.direction='rtl';
-  txt(`${FN[u.floor]} · ${bnOf(u)} · ${bedsTxt(u.beds)}`,285,29,F('400',3.6),MU);
+  txt(`${FN[u.floor]} · ${bnOf(u)} · ${bedsTxt(u.beds)}${u.park?' · '+parkTxt(u):''}`,285,29,F('400',3.6),MU);
   // logo (top-left)
   try{const li=await logoImg();const lgH=12,lgW=lgH*243.05/75.97;c.drawImage(li,12*K,8*K,lgW*K,lgH*K);
     c.direction='ltr';txt("107-2",12+55*lgH/75.97,8+64.37*lgH/75.97,F('400',21.57*lgH/75.97,DF),'#b07a52','left');c.direction='rtl';}catch(e){}
