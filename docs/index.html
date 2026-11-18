@@ -312,6 +312,7 @@ footer{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--muted);f
   .seg button{padding:8px 11px;font-size:13px}
   .canvas{padding:12px 8px 34px}
 }
+@media (max-width:620px){#bldSeg{max-width:100%;overflow-x:auto;scrollbar-width:none}#bldSeg button{padding:7px 10px}.stage-top .stage-tools{width:100%}}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
@@ -501,7 +502,8 @@ function seg(el,items,cur,onPick){
 const setFloorSeg=seg($('#floorSeg'),FLOORS.map(f=>[f[0],`${f[1]}<small class="num">${U.filter(u=>u.floor===f[0]).length}</small>`]),state.floor,v=>{if(v!==state.floor)showFloor(v)});
 seg($('#avSeg'),[[0,'كل الحالات'],[1,'المتاحة فقط']],0,v=>{state.av=+v;applyFilter()});
 seg($('#bedSeg'),[[0,'كل الشقق'],[1,'غرفة'],[2,'غرفتين'],[3,'3 غرف']],0,v=>{state.beds=+v;applyFilter()});
-const setBldSeg=seg($('#bldSeg'),[[-1,'كل المباني'],[0,'A1 · A2'],[1,'B1 · B2'],[2,'C1 · C2']],state.bld,v=>{state.bld=+v;zoomTo(+v);markBld()});
+const HV=['A1','A2','B1','B2','C1','C2'];
+const setBldSeg=seg($('#bldSeg'),[[-1,'كل المباني'],...HV.map((n,i)=>[i,n])],state.bld,v=>{state.bld=+v;zoomTo(+v);markBld()});
 
 /* ---- floor rendering ---- */
 const canvas=$('#canvas'); let svg=null, curVB=null;
@@ -534,11 +536,17 @@ function setVB(v){curVB=v;
   let [x,y,w,h]=v; if(W/H>w/h){const nw=h*W/H;x-=(nw-w)/2;w=nw}else{const nh=w*H/W;y-=(nh-h)/2;h=nh}
   svg.style.height=H+'px';
   svg.setAttribute('viewBox',[x,y,w,h].map(n=>n.toFixed(2)).join(' '));}
-function markBld(){const b=state.bld;svg.querySelectorAll('.u,.lb').forEach(g=>g.classList.toggle('off',b>=0&&BY[g.dataset.code].b!==b));}
+function markBld(){const b=state.bld;svg.querySelectorAll('.u,.lb').forEach(g=>g.classList.toggle('off',b>=0&&BY[g.dataset.code].bn!==HV[b]));}
+function halfVB(f,b){
+  if(b<0)return F[f].vb.slice();
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  Object.values(F[f].units).forEach(p=>{if(p.bn!==HV[b])return;p.poly.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)})});
+  const w=x1-x0,h=y1-y0,pd=Math.max(w,h)*.08; return [x0-pd,y0-pd,w+2*pd,h+2*pd+12];
+}
 addEventListener('resize',()=>{if(svg&&curVB)setVB(curVB)});
 let zAnim=0;
 function zoomTo(b,instant){
-  const to=bldVB(state.floor,b); const from=curVB||to;
+  const to=halfVB(state.floor,b); const from=curVB||to;
   cancelAnimationFrame(zAnim);
   if(instant||RM){setVB(to);return}
   const t0=performance.now(),dur=900;
@@ -557,7 +565,7 @@ function showFloor(f,first){
     svg.style.opacity=0; setTimeout(()=>{svg.style.opacity='';},180);
   } else if(old) old.remove();
   canvas.appendChild(svg);
-  setVB(bldVB(f,state.bld));
+  setVB(halfVB(f,state.bld));
   if(!first) setFloorSeg(f,true);
   markBld(); applyStatus(); applyFilter();
 }
