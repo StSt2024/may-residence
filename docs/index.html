@@ -523,9 +523,9 @@ function buildFloor(f){
     const p=fl.units[u.code]; const r=p.r;
     const s=Math.max(3.6,Math.min(r*.3,7.2));
     const d=(i%12)*.03+(u.b*.08);
-    polys+=`<g class="u u-in" tabindex="0" role="button" aria-label="شقة ${u.code}، ${fmt(u.price)} ريال، ${fa(u.tot)} متر مربع" data-code="${u.code}" style="--c:${COL[u.beds]};animation-delay:${d}s"><polygon points="${p.poly.map(q=>q.join(',')).join(' ')}"/></g>`;
+    polys+=`<g class="u u-in" tabindex="0" role="button" aria-label="شقة ${u.name}، ${fmt(u.price)} ريال، ${fa(u.tot)} متر مربع" data-code="${u.code}" style="--c:${COL[u.beds]};animation-delay:${d}s"><polygon points="${p.poly.map(q=>q.join(',')).join(' ')}"/></g>`;
     labels+=`<g class="lb u-in" data-code="${u.code}" style="animation-delay:${d+.15}s"><g transform="translate(${p.lx},${p.ly})">
-      <text class="c" y="${-s*1.05}" font-size="${s*1.25}" stroke-width="${s*.35}">${u.code}</text>
+      <text class="c" y="${-s*1.05}" font-size="${s*1.25}" stroke-width="${s*.35}">${u.name}</text>
       <text class="p num" data-p="${fmt(u.price)}" y="${s*.45}" font-size="${s*.95}" stroke-width="${s*.3}">${fmt(u.price)}</text>
       <text class="a num" y="${s*1.6}" font-size="${s*.8}" stroke-width="${s*.28}">${fa(u.tot)} م²</text></g></g>`;
   });
@@ -588,7 +588,7 @@ function applyFilter(){
 function applyStatus(){
   if(svg){
     svg.querySelectorAll('.u').forEach(g=>{const r=isRes(g.dataset.code);g.classList.toggle('res',r);
-      const u=BY[g.dataset.code];g.setAttribute('aria-label',`شقة ${u.code}، ${r?'محجوزة':fmt(u.price)+' ريال'}، ${fa(u.tot)} متر مربع`)});
+      const u=BY[g.dataset.code];g.setAttribute('aria-label',`شقة ${u.name}، ${r?'محجوزة':fmt(u.price)+' ريال'}، ${fa(u.tot)} متر مربع`)});
     svg.querySelectorAll('.lb .p').forEach(t=>{const r=isRes(t.parentNode.parentNode.dataset.code);t.textContent=r?'محجوزة':t.dataset.p;t.classList.toggle('rs',r)});
   }
   Object.values(cardEls).forEach(c=>{const r=isRes(c.dataset.code);c.classList.toggle('res',r);const p=c.querySelector('.st');p.className='st '+(r?'rs':'av');p.textContent=r?'محجوزة':'متاحة';p.hidden=!stReady});
@@ -600,7 +600,7 @@ function applyStatus(){
 
 /* ---- tooltip ---- */
 const tip=$('#tip');
-function tipHTML(u){const r=isRes(u.code);return `<div class="t1"><b>${u.code}</b><span>${FN[u.floor]} · ${bnOf(u)}</span></div>
+function tipHTML(u){const r=isRes(u.code);return `<div class="t1"><b>${u.name}</b><span>${FN[u.floor]} · ${bnOf(u)}</span></div>
   ${stReady?`<div style="margin-top:8px"><span class="st ${r?'rs':'av'}">${r?'محجوزة':'متاحة'}</span></div>`:''}
   <div class="pr num" ${r?'style="text-decoration:line-through;opacity:.6"':''}>${fmt(u.price)}<small>ريال</small></div>
   <dl class="num"><dt>غرف النوم</dt><dd>${u.beds}</dd><dt>دورات المياه</dt><dd>${u.baths}</dd><dt>مساحة الوحدة</dt><dd>${ar(u.sale)} م²</dd>${u.priv!=null?`<dt>مساحة الأجزاء الخاصة</dt><dd>${ar(u.priv)} م²</dd>`:''}${u.total?`<dt>المساحة الإجمالية</dt><dd>${ar(u.total)} م²</dd>`:''}</dl>
@@ -624,7 +624,7 @@ function shapeSVG(u){
   return `<svg class="shape" viewBox="${x-(m-w)/2-2} ${y-(m-h)/2-2} ${m+4} ${m+4}" aria-hidden="true"><polygon points="${p.poly.map(q=>q.join(',')).join(' ')}"/></svg>`;
 }
 cardsEl.innerHTML=U.map(u=>`<button class="card" data-code="${u.code}" style="--c:${COL[u.beds]}">
-  <div class="cd num">${u.code}</div>${shapeSVG(u)}<div class="fl">${FN[u.floor]} · ${bnOf(u)}</div>
+  <div class="cd num">${u.name}</div>${shapeSVG(u)}<div class="fl">${FN[u.floor]} · ${bnOf(u)}</div>
   <div class="pr num">${fmt(u.price)} <small>ريال</small></div>
   <div class="meta num"><span>${bedsTxt(u.beds)}</span><span>${u.baths} دورات مياه</span><span>${fa(u.tot)} م²</span></div><span class="st av" hidden>متاحة</span></button>`).join('');
 const cardEls=Object.fromEntries([...cardsEl.children].map(c=>[c.dataset.code,c]));
@@ -661,13 +661,13 @@ function renderPedit(){
 }
 function fillUnit(u,dir){
   uv.style.setProperty('--c',COLHEX[u.beds]);
-  $('#crumb').innerHTML=`${FN[u.floor]} · ${bnOf(u)} · <b>شقة ${u.code}</b>`;
+  $('#crumb').innerHTML=`${FN[u.floor]} · ${bnOf(u)} · <b>شقة ${u.name}</b>`;
   const s=seq(u),k=s.indexOf(u); $('#prev').disabled=k<=0; $('#next').disabled=k>=s.length-1;
   const loc=F[u.floor], lvb=bldVB(u.floor,u.b);
   const sum=u.rooms.reduce((a,r)=>a+r.area,0);
   side.innerHTML=`<div class="stg">
     <div class="eyebrow">مخطط الشقة · ${FN[u.floor]}</div>
-    <h2 id="uvCode" class="num">${u.code}</h2>
+    <h2 id="uvCode" class="num">${u.name}</h2>
     <div class="sub">${bnOf(u)} · ${bedsTxt(u.beds)}</div>
     <div class="uv-status" id="uvSt"></div>
     <div class="price" id="uvPrice">${priceInner(u)}</div>
@@ -690,7 +690,7 @@ function fillUnit(u,dir){
     <div class="printhint">يجهّز ملف PDF بمقاس A4 جاهز للطباعة</div></div>
   </div>`;
   renderUvStatus(); renderPedit();
-  $('#ptag').textContent=`${u.code} · ${FN[u.floor]}`;
+  $('#ptag').textContent=`${u.name} · ${FN[u.floor]}`;
   $('#pscale').textContent=`مقياس الرسم الأصلي 1:${u.scale}`;
   plan.innerHTML='<div class="spin"></div>';
   plan.className='plan'+(dir? (dir>0?' slide-l':' slide-r'):'');
@@ -806,7 +806,7 @@ async function buildSheet(u){
   const res=stReady&&isRes(u.code);
   // header
   txt('مخطط الشقة',285,19,F('500',4.2),BR);
-  c.direction='ltr'; txt(u.code,285-c.measureText('مخطط الشقة').width/K-3,20.5,F('700',9,DF),INK,'right'); c.direction='rtl';
+  c.direction='ltr'; txt(u.name,285-c.measureText('مخطط الشقة').width/K-3,20.5,F('700',9,DF),INK,'right'); c.direction='rtl';
   txt(`${FN[u.floor]} · ${bnOf(u)} · ${bedsTxt(u.beds)}${u.park?' · '+parkTxt(u):''}`,285,29,F('400',3.6),MU);
   // logo (top-left)
   try{const li=await logoImg();const lgH=12,lgW=lgH*243.05/75.97;c.drawImage(li,12*K,8*K,lgW*K,lgH*K);
@@ -883,10 +883,10 @@ async function printUnit(u){
     await loadJsPDF();
     const cv=await buildSheet(u);
     const pdf=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true});
-    pdf.setProperties({title:'مخطط الشقة '+u.code});
+    pdf.setProperties({title:'مخطط الشقة '+u.name});
     pdf.addImage(cv.toDataURL('image/jpeg',0.93),'JPEG',0,0,297,210);
     const blob=pdf.output('blob');
-    await dlNS.save({filename:`مخطط-الشقة-${u.code}.pdf`,data:blob});
+    await dlNS.save({filename:`مخطط-الشقة-${u.name}.pdf`,data:blob});
     toast('تم حفظ الملف. افتحه واطبعه من جهازك');
   }catch(e){
     if(e&&e.code==='declined'){}
@@ -940,9 +940,9 @@ async function save(code,undo,msg){
     if(e&&e.code==='invalid_argument'){if(GHMODE){canWrite=false;setRole(role)}else $('#staffwarn').classList.add('on');toast('ما انحفظ: ما عندك صلاحية تعديل')}
     else toast('ما انحفظ التغيير، حاول مرة ثانية')}).finally(()=>{writing[code]=null});
 }
-function setSt(code,s){const prev=ST[code]||'available';if(prev===s)return;ST[code]=s;save(code,()=>{ST[code]=prev},`${code}: ${s==='reserved'?'محجوزة':'متاحة'}`)}
+function setSt(code,s){const prev=ST[code]||'available';if(prev===s)return;ST[code]=s;save(code,()=>{ST[code]=prev},`${BY[code].name}: ${s==='reserved'?'محجوزة':'متاحة'}`)}
 function setPrice(code,v){const prev=PR[code]??null;if(prev===v){toast('السعر نفسه ما تغيّر');return}if(v==null)delete PR[code];else PR[code]=v;
-  save(code,()=>{if(prev==null)delete PR[code];else PR[code]=prev},`${code}: السعر الجديد ${fmt(v??BY[code].price0)} ريال`)}
+  save(code,()=>{if(prev==null)delete PR[code];else PR[code]=prev},`${BY[code].name}: السعر الجديد ${fmt(v??BY[code].price0)} ريال`)}
 function applyPrices(){
   U.forEach(u=>u.price=PR[u.code]??u.price0);
   if(svg)svg.querySelectorAll('.lb .p').forEach(t=>{t.dataset.p=fmt(BY[t.parentNode.parentNode.dataset.code].price)});
@@ -987,7 +987,7 @@ function ghWrite(code,body){
     for(let attempt=0;attempt<3;attempt++){
       const {data,sha}=await ghRead(); data.units=data.units||{}; data.units[code]=body; data.updated=new Date().toISOString();
       const r=await fetch(`${GHAPI}/contents/${GH.path}`,{method:'PUT',headers:{...ghH(),'Content-Type':'application/json'},
-        body:JSON.stringify({message:`${code}: ${body.s==='reserved'?'محجوزة':'متاحة'}${body.price?' · '+body.price:''}`,content:b64e(JSON.stringify(data,null,1)),branch:GH.branch,...(sha?{sha}:{})})});
+        body:JSON.stringify({message:`${BY[code].name} (${code}): ${body.s==='reserved'?'محجوزة':'متاحة'}${body.price?' · '+body.price:''}`,content:b64e(JSON.stringify(data,null,1)),branch:GH.branch,...(sha?{sha}:{})})});
       if(r.ok){lastJSON=JSON.stringify(data.units);return}
       if(r.status===401||r.status===403||r.status===404)throw {code:'invalid_argument'};
       if(r.status!==409&&r.status!==422)throw {code:'unavailable'};
