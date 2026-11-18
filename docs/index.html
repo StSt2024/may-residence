@@ -345,12 +345,12 @@ footer{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--muted);f
     <div>
       <div class="eyebrow reveal">مخططات الشقق · قائمة الأسعار</div>
       <h1 class="reveal" style="animation-delay:.08s">اختر شقتك <em>من المخطط</em> مباشرة</h1>
-      <p class="lead reveal" style="animation-delay:.16s">ستة مبانٍ وأربعة أدوار. مرّر على أي وحدة في المخطط لتشوف سعرها ومساحتها، واضغط عليها لتفتح مخططها الكامل مع جدول المساحات.</p>
+      <p class="lead reveal" style="animation-delay:.16s">ستة مباني وأربعة أدوار. مرّر على أي وحدة في المخطط لتشوف سعرها ومساحتها، واضغط عليها لتفتح مخططها الكامل مع جدول المساحات.</p>
       <div class="stats reveal num" style="animation-delay:.24s" id="stats"></div>
       <a class="cta reveal" style="animation-delay:.32s" href="#explore">استعرض المخططات
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2v12M3 9l5 5 5-5"/></svg></a>
     </div>
-    <div class="hero-vis reveal" style="animation-delay:.2s" id="heroVis"><div class="cap">الدور الأرضي · 6 مبانٍ · 36 شقة</div></div>
+    <div class="hero-vis reveal" style="animation-delay:.2s" id="heroVis"><div class="cap">الدور الأرضي · 6 مباني · 36 شقة</div></div>
   </div>
 </header>
 
@@ -472,7 +472,7 @@ if(innerWidth<700) state.bld=0;
 const prices=U.map(u=>u.price), nets=U.map(u=>u.net);
 function renderStats(){const av=U.filter(u=>!isRes(u.code)).length;const prices=U.map(u=>u.price);
 $('#stats').innerHTML=[
-  [U.length,'شقة'],[stReady?av:'—','متاحة'],[6,'مبانٍ'],
+  [U.length,'شقة'],[stReady?av:'—','متاحة'],[6,'مباني'],
   ['<bdi dir="ltr">'+Math.floor(Math.min(...prices)/1000)+'–'+Math.round(Math.max(...prices)/1000)+'</bdi> ألف','نطاق الأسعار (ريال)']
 ].map(([b,s])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');}
 renderStats();
