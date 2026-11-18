@@ -673,7 +673,7 @@ function fillUnit(u,dir){
     </div>
     <h3>جدول مساحات الفراغات <span>م²</span></h3>
     <ul class="rooms num" id="rooms">${u.rooms.map((r,i)=>`<li data-n="${i+1}"><i>${i+1}</i><span>${r.name}</span><em>${r.area.toFixed(2)}</em></li>`).join('')}
-      ${(u.ext||[]).map((e,j)=>`<li class="ext" data-n="${u.rooms.length+j+1}"><i>${u.rooms.length+j+1}</i><span>${e.name} (خارجي)</span><em>${e.area.toFixed(2)}</em></li>`).join('')}${u.ext?`<li class="tot gr"><i style="background:none"></i><span>الإجمالي شامل الفراغات الخارجية</span><em>${u.gross.toFixed(2)}</em></li>`:''}</ul>
+      ${(u.ext||[]).map((e,j)=>`<li class="ext" data-n="${u.rooms.length+j+1}"><i>${u.rooms.length+j+1}</i><span>${e.name} (خارجي)</span><em>${e.area.toFixed(2)}</em></li>`).join('')}</ul>
     <h3>موقع الشقة في ${FN[u.floor]}</h3>
     <div class="loc"><svg viewBox="${lvb.join(' ')}"><path class="ft" d="${loc.foot}" fill-rule="evenodd"/>${Object.entries(loc.units).map(([c,p])=>`<polygon ${c===u.code?'class="me"':''} points="${p.poly.map(q=>q.join(',')).join(' ')}"/>`).join('')}<path class="wl" d="${loc.walls}" fill-rule="evenodd"/></svg></div>
     <div class="note">المساحات صافية مقاسة من الوجه الداخلي للجدران. الأثاث المعروض توضيحي ولا يشكل جزءًا من التسليم.</div>
@@ -843,7 +843,7 @@ async function buildSheet(u){
   y+=33;
   txt('جدول مساحات الفراغات',sx,y,F('600',3.4),INK); txt('م²',s0,y,F('400',3),MU,'left'); y+=3;
   const ex=u.ext||[];
-  const rh=Math.min(7,(190-y)/(u.rooms.length+ex.length+(ex.length?1.2:0)+.2));
+  const rh=Math.min(7,(190-y)/(u.rooms.length+ex.length+.2));
   u.rooms.forEach((r,i)=>{const ry=y+i*rh;
     if(i%2===0){c.fillStyle='#f7f3ed';c.fillRect(s0*K,ry*K,sw*K,rh*K)}
     c.fillStyle=BR;c.beginPath();c.arc((sx-4)*K,(ry+rh/2)*K,2.1*K,0,7);c.fill();
@@ -858,9 +858,7 @@ async function buildSheet(u){
       c.direction='ltr';txt(String(n),sx-4,ry+rh/2+1,F('600',2.6),'#fff','center');
       txt(e.area.toFixed(2),s0+2,ry+rh/2+1.1,F('400',3),INK,'left');c.direction='rtl';
       txt(e.name+' (خارجي)',sx-8,ry+rh/2+1.1,F('400',3),INK)});
-    y+=ex.length*rh; c.fillStyle=BR; c.fillRect(s0*K,y*K,sw*K,.4*K);
-    txt('الإجمالي شامل الفراغات الخارجية',sx-2,y+rh/2+1.6,F('600',3),INK);
-    c.direction='ltr';txt(u.gross.toFixed(2),s0+2,y+rh/2+1.6,F('700',3.2),INK,'left');c.direction='rtl';}
+    y+=ex.length*rh;}
   // footer
   c.fillStyle=LN; c.fillRect(12*K,193*K,273*K,.3*K);
   txt('المساحات صافية مقاسة من الوجه الداخلي للجدران. الأثاث في المخطط توضيحي ولا يشكل جزءًا من التسليم. الأسعار حسب قائمة الأسعار المعتمدة وقابلة للتغيير.',285,199,F('400',2.6),MU);
