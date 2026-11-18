@@ -603,7 +603,7 @@ const tip=$('#tip');
 function tipHTML(u){const r=isRes(u.code);return `<div class="t1"><b>${u.code}</b><span>${FN[u.floor]} · ${bnOf(u)}</span></div>
   ${stReady?`<div style="margin-top:8px"><span class="st ${r?'rs':'av'}">${r?'محجوزة':'متاحة'}</span></div>`:''}
   <div class="pr num" ${r?'style="text-decoration:line-through;opacity:.6"':''}>${fmt(u.price)}<small>ريال</small></div>
-  <dl class="num"><dt>غرف النوم</dt><dd>${u.beds}</dd><dt>دورات المياه</dt><dd>${u.baths}</dd><dt>مساحة الوحدة</dt><dd>${ar(u.sale)} م²</dd>${u.total?`<dt>المساحة الإجمالية</dt><dd>${ar(u.total)} م²</dd>`:''}${u.priv!=null?`<dt>مساحة الأجزاء الخاصة</dt><dd>${ar(u.priv)} م²</dd>`:''}</dl>
+  <dl class="num"><dt>غرف النوم</dt><dd>${u.beds}</dd><dt>دورات المياه</dt><dd>${u.baths}</dd><dt>مساحة الوحدة</dt><dd>${ar(u.sale)} م²</dd>${u.priv!=null?`<dt>مساحة الأجزاء الخاصة</dt><dd>${ar(u.priv)} م²</dd>`:''}${u.total?`<dt>المساحة الإجمالية</dt><dd>${ar(u.total)} م²</dd>`:''}</dl>
   <div class="go">${editing?'اضغط لتغيير الحالة':'اضغط لفتح المخطط ←'}</div>`}
 canvas.addEventListener('pointermove',e=>{
   const g=e.target.closest('.u'); if(!g||e.pointerType==='touch'){tip.classList.remove('on');return}
@@ -675,9 +675,9 @@ function fillUnit(u,dir){
     <div class="tiles num">
       <div class="tile"><b>${u.beds}</b><span>غرف النوم</span></div>
       <div class="tile"><b>${u.baths}</b><span>دورات المياه</span></div>
-      <div class="tile"${u.total?'':' style="grid-column:1/-1"'}><b>${ar(u.sale)} <small>م²</small></b><span>مساحة الوحدة</span></div>
-      ${u.total?`<div class="tile"><b>${ar(u.total)} <small>م²</small></b><span>المساحة الإجمالية</span></div>`:''}
+      <div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>مساحة الوحدة</span><b>${ar(u.sale)} <small>م²</small></b></div>
       ${u.priv!=null?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>مساحة الأجزاء الخاصة</span><b>${ar(u.priv)} <small>م²</small></b></div>`:''}
+      ${u.total?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>المساحة الإجمالية</span><b>${ar(u.total)} <small>م²</small></b></div>`:''}
       ${u.park?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>الموقف</span><b style="font-size:17px">${parkTxt(u)}</b></div>`:''}
     </div>
     <h3>جدول مساحات الفراغات <span>م²</span></h3>
@@ -845,11 +845,15 @@ async function buildSheet(u){
   c.direction='rtl'; txt('ريال',sx-7-pvw,y+17,F('500',3.4),pc);
   txt(`مساحة الوحدة ${ar(u.sale)} م²${u.total?` · المساحة الإجمالية ${ar(u.total)} م²`:''}`,sx-5,y+22.5,F('400',2.8),pc);
   y+=30;
-  const tiles=[[u.beds,'غرف النوم'],[u.baths,'دورات المياه'],[ar(u.sale)+' م²','مساحة الوحدة'],[u.total?ar(u.total)+' م²':'—','المساحة الإجمالية'],...(u.priv!=null?[[ar(u.priv)+' م²','مساحة الأجزاء الخاصة']]:[])];
-  tiles.forEach((tl,i)=>{const tx=sx-(i%2)*(sw/2+1),ty=y+Math.floor(i/2)*15,tw=sw/2-1;
+  const tiles=[[u.beds,'غرف النوم'],[u.baths,'دورات المياه']];
+  tiles.forEach((tl,i)=>{const tx=sx-(i%2)*(sw/2+1),ty=y,tw=sw/2-1;
     c.strokeStyle=LN;c.lineWidth=.3*K;rr(c,(tx-tw)*K,ty*K,tw*K,13*K,2*K);c.stroke();
     txt(String(tl[0]),tx-4,ty+6.5,F('600',4.6,DF),INK);txt(tl[1],tx-4,ty+10.8,F('400',2.7),MU)});
-  y+=15*Math.ceil(tiles.length/2)+3;
+  y+=15;
+  const arows=[['مساحة الوحدة',ar(u.sale)],...(u.priv!=null?[['مساحة الأجزاء الخاصة',ar(u.priv)]]:[]),...(u.total?[['المساحة الإجمالية',ar(u.total)]]:[])];
+  arows.forEach(([l,v],i)=>{const ty=y+i*9;c.strokeStyle=LN;c.lineWidth=.3*K;rr(c,s0*K,ty*K,sw*K,8*K,2*K);c.stroke();
+    txt(l,sx-4,ty+5.3,F('400',3),MU);c.direction='ltr';c.font=F('400',2.8);const uw=c.measureText('م²').width/K;txt('م²',s0+4,ty+5.5,F('400',2.8),MU,'left');txt(v,s0+5.2+uw,ty+5.5,F('600',3.8,DF),INK,'left');c.direction='rtl'});
+  y+=arows.length*9+3;
   txt('جدول مساحات الفراغات',sx,y,F('600',3.4),INK); txt('م²',s0,y,F('400',3),MU,'left'); y+=3;
   const ex=u.ext||[];
   const rh=Math.min(7,(190-y)/(u.rooms.length+ex.length+.2));
