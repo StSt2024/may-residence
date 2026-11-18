@@ -174,6 +174,8 @@ section.ls{padding:40px 0 90px}
 .rooms li:hover,.rooms li.hot{background:#1e242b}
 .rooms li i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#8a6a43;color:#fff;font-size:11px;display:grid;place-items:center}
 .rooms li.tot{background:#1a1f25;font-weight:600}
+.rooms li.ext i{background:#5f8a80}
+.rooms li.gr{background:#1e242b;border-top:1px solid var(--bronze)}
 .rooms li em{font-style:normal;color:var(--muted)}
 .loc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px}
 .loc svg{width:100%;height:auto;display:block}
@@ -582,7 +584,7 @@ const tip=$('#tip');
 function tipHTML(u){const r=isRes(u.code);return `<div class="t1"><b>${u.code}</b><span>${FN[u.floor]} · ${BN[u.b]}</span></div>
   ${stReady?`<div style="margin-top:8px"><span class="st ${r?'rs':'av'}">${r?'محجوزة':'متاحة'}</span></div>`:''}
   <div class="pr num" ${r?'style="text-decoration:line-through;opacity:.6"':''}>${fmt(u.price)}<small>ريال</small></div>
-  <dl class="num"><dt>غرف النوم</dt><dd>${u.beds}</dd><dt>دورات المياه</dt><dd>${u.baths}</dd><dt>المساحة الصافية</dt><dd>${fa(u.net)} م²</dd><dt>مساحة البيع</dt><dd>${u.sale.toFixed(2)} م²</dd><dt>سعر المتر (بيع)</dt><dd>${fmt(Math.round(u.price/u.sale))}</dd></dl>
+  <dl class="num"><dt>غرف النوم</dt><dd>${u.beds}</dd><dt>دورات المياه</dt><dd>${u.baths}</dd><dt>المساحة الصافية</dt><dd>${fa(u.net)} م²</dd><dt>مساحة البيع</dt><dd>${u.sale.toFixed(2)} م²</dd>${u.ext?`<dt>${u.ext.map(e=>e.name).join(' + ')} (خارجي)</dt><dd>${u.ext.reduce((a,e)=>a+e.area,0).toFixed(2)} م²</dd>`:''}<dt>سعر المتر (بيع)</dt><dd>${fmt(Math.round(u.price/u.sale))}</dd></dl>
   <div class="go">${editing?'اضغط لتغيير الحالة':'اضغط لفتح المخطط ←'}</div>`}
 canvas.addEventListener('pointermove',e=>{
   const g=e.target.closest('.u'); if(!g||e.pointerType==='touch'){tip.classList.remove('on');return}
@@ -656,10 +658,11 @@ function fillUnit(u,dir){
       <div class="tile"><b>${u.baths}</b><span>دورات المياه</span></div>
       <div class="tile"><b>${fa(u.net)} <small>م²</small></b><span>المساحة الصافية</span></div>
       <div class="tile"><b>${u.sale.toFixed(1)} <small>م²</small></b><span>مساحة البيع</span></div>
+      ${u.ext?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>${u.ext.map(e=>e.name).join(' + ')} خاصة (خارجية)</span><b>${u.ext.reduce((a,e)=>a+e.area,0).toFixed(2)} <small>م²</small></b></div>`:''}
     </div>
     <h3>جدول مساحات الفراغات <span>م²</span></h3>
     <ul class="rooms num" id="rooms">${u.rooms.map((r,i)=>`<li data-n="${i+1}"><i>${i+1}</i><span>${r.name}</span><em>${r.area.toFixed(2)}</em></li>`).join('')}
-      <li class="tot"><i style="background:none"></i><span>إجمالي المساحة الداخلية الصافية</span><em>${u.net.toFixed(2)}</em></li></ul>
+      <li class="tot"><i style="background:none"></i><span>إجمالي المساحة الداخلية الصافية</span><em>${u.net.toFixed(2)}</em></li>${(u.ext||[]).map((e,j)=>`<li class="ext" data-n="${u.rooms.length+j+1}"><i>${u.rooms.length+j+1}</i><span>${e.name} (خارجي)</span><em>${e.area.toFixed(2)}</em></li>`).join('')}${u.ext?`<li class="tot gr"><i style="background:none"></i><span>الإجمالي شامل الفراغات الخارجية</span><em>${u.gross.toFixed(2)}</em></li>`:''}</ul>
     <h3>موقع الشقة في ${FN[u.floor]}</h3>
     <div class="loc"><svg viewBox="${lvb.join(' ')}"><path class="ft" d="${loc.foot}" fill-rule="evenodd"/>${Object.entries(loc.units).map(([c,p])=>`<polygon ${c===u.code?'class="me"':''} points="${p.poly.map(q=>q.join(',')).join(' ')}"/>`).join('')}<path class="wl" d="${loc.walls}" fill-rule="evenodd"/></svg></div>
     <div class="note">المساحات صافية مقاسة من الوجه الداخلي للجدران. الأثاث المعروض توضيحي ولا يشكل جزءًا من التسليم.</div>
@@ -828,7 +831,8 @@ async function buildSheet(u){
     txt(String(tl[0]),tx-4,ty+6.5,F('600',4.6,DF),INK);txt(tl[1],tx-4,ty+10.8,F('400',2.7),MU)});
   y+=33;
   txt('جدول مساحات الفراغات',sx,y,F('600',3.4),INK); txt('م²',s0,y,F('400',3),MU,'left'); y+=3;
-  const rh=Math.min(7,(190-y)/(u.rooms.length+1.2));
+  const ex=u.ext||[];
+  const rh=Math.min(7,(190-y)/(u.rooms.length+ex.length+(ex.length?2.4:1.2)));
   u.rooms.forEach((r,i)=>{const ry=y+i*rh;
     if(i%2===0){c.fillStyle='#f7f3ed';c.fillRect(s0*K,ry*K,sw*K,rh*K)}
     c.fillStyle=BR;c.beginPath();c.arc((sx-4)*K,(ry+rh/2)*K,2.1*K,0,7);c.fill();
@@ -838,6 +842,16 @@ async function buildSheet(u){
   y+=u.rooms.length*rh; c.fillStyle=INK; c.fillRect(s0*K,y*K,sw*K,.3*K);
   txt('إجمالي المساحة الداخلية الصافية',sx-2,y+rh/2+1.6,F('600',3),INK);
   c.direction='ltr';txt(u.net.toFixed(2),s0+2,y+rh/2+1.6,F('700',3.2),INK,'left');c.direction='rtl';
+  if(ex.length){ y+=rh*1.2;
+    ex.forEach((e,j)=>{const ry=y+j*rh,n=u.rooms.length+j+1;
+      c.fillStyle='#eef4f2';c.fillRect(s0*K,ry*K,sw*K,rh*K);
+      c.fillStyle='#5f8a80';c.beginPath();c.arc((sx-4)*K,(ry+rh/2)*K,2.1*K,0,7);c.fill();
+      c.direction='ltr';txt(String(n),sx-4,ry+rh/2+1,F('600',2.6),'#fff','center');
+      txt(e.area.toFixed(2),s0+2,ry+rh/2+1.1,F('400',3),INK,'left');c.direction='rtl';
+      txt(e.name+' (خارجي)',sx-8,ry+rh/2+1.1,F('400',3),INK)});
+    y+=ex.length*rh; c.fillStyle=BR; c.fillRect(s0*K,y*K,sw*K,.4*K);
+    txt('الإجمالي شامل الفراغات الخارجية',sx-2,y+rh/2+1.6,F('600',3),INK);
+    c.direction='ltr';txt(u.gross.toFixed(2),s0+2,y+rh/2+1.6,F('700',3.2),INK,'left');c.direction='rtl';}
   // footer
   c.fillStyle=LN; c.fillRect(12*K,193*K,273*K,.3*K);
   txt('المساحات صافية مقاسة من الوجه الداخلي للجدران. الأثاث في المخطط توضيحي ولا يشكل جزءًا من التسليم. الأسعار حسب قائمة الأسعار المعتمدة وقابلة للتغيير.',285,199,F('400',2.6),MU);
