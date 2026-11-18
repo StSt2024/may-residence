@@ -585,7 +585,7 @@ const tip=$('#tip');
 function tipHTML(u){const r=isRes(u.code);return `<div class="t1"><b>${u.code}</b><span>${FN[u.floor]} · ${BN[u.b]}</span></div>
   ${stReady?`<div style="margin-top:8px"><span class="st ${r?'rs':'av'}">${r?'محجوزة':'متاحة'}</span></div>`:''}
   <div class="pr num" ${r?'style="text-decoration:line-through;opacity:.6"':''}>${fmt(u.price)}<small>ريال</small></div>
-  <dl class="num"><dt>غرف النوم</dt><dd>${u.beds}</dd><dt>دورات المياه</dt><dd>${u.baths}</dd><dt>المساحة الإجمالية</dt><dd>${fa(u.tot)} م²</dd><dt>مساحة الشقة</dt><dd>${u.sale.toFixed(2)} م²</dd>${u.ext?`<dt>${u.ext.map(e=>e.name).join(' + ')} (خارجي)</dt><dd>${u.ext.reduce((a,e)=>a+e.area,0).toFixed(2)} م²</dd>`:''}<dt>سعر المتر</dt><dd>${fmt(Math.round(u.price/u.sale))}</dd></dl>
+  <dl class="num"><dt>غرف النوم</dt><dd>${u.beds}</dd><dt>دورات المياه</dt><dd>${u.baths}</dd><dt>المساحة الإجمالية</dt><dd>${fa(u.tot)} م²</dd><dt>المساحة البيعية</dt><dd>${u.sale.toFixed(2)} م²</dd>${u.ext?`<dt>${u.ext.map(e=>e.name).join(' + ')} (خارجي)</dt><dd>${u.ext.reduce((a,e)=>a+e.area,0).toFixed(2)} م²</dd>`:''}<dt>سعر المتر</dt><dd>${fmt(Math.round(u.price/u.sale))}</dd></dl>
   <div class="go">${editing?'اضغط لتغيير الحالة':'اضغط لفتح المخطط ←'}</div>`}
 canvas.addEventListener('pointermove',e=>{
   const g=e.target.closest('.u'); if(!g||e.pointerType==='touch'){tip.classList.remove('on');return}
@@ -632,7 +632,7 @@ function prefetch(code){if(!cache[code])cache[code]=fetch('plans/'+code+'.svg').
 const uv=$('#uv'), curtain=$('#curtain'), side=$('#side'), plan=$('#plan');
 let cur=null, origin=null, openState=false;
 function seq(u){return U.filter(x=>x.floor===u.floor)}
-function priceInner(u){return `<div class="l">السعر الإجمالي${role==='staff'&&PR[u.code]!=null?'<span class="mod">معدّل</span>':''}</div><div class="v num">${fmt(u.price)}<small>ريال</small></div><div class="ppm num">مساحة الشقة ${u.sale.toFixed(2)} م² · ${fmt(Math.round(u.price/u.sale))} ريال للمتر</div>`}
+function priceInner(u){return `<div class="l">السعر الإجمالي${role==='staff'&&PR[u.code]!=null?'<span class="mod">معدّل</span>':''}</div><div class="v num">${fmt(u.price)}<small>ريال</small></div><div class="ppm num">المساحة البيعية ${u.sale.toFixed(2)} م² · ${fmt(Math.round(u.price/u.sale))} ريال للمتر</div>`}
 function renderPedit(){
   const el=$('#uvPedit'); if(!el||!cur)return;
   if(role!=='staff'||!dbRef){el.innerHTML='';return}
@@ -658,7 +658,7 @@ function fillUnit(u,dir){
       <div class="tile"><b>${u.beds}</b><span>غرف النوم</span></div>
       <div class="tile"><b>${u.baths}</b><span>دورات المياه</span></div>
       <div class="tile"><b>${fa(u.tot)} <small>م²</small></b><span>المساحة الإجمالية</span></div>
-      <div class="tile"><b>${u.sale.toFixed(1)} <small>م²</small></b><span>مساحة الشقة</span></div>
+      <div class="tile"><b>${u.sale.toFixed(1)} <small>م²</small></b><span>المساحة البيعية</span></div>
       ${u.ext?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>${u.ext.map(e=>e.name).join(' + ')} خاصة (خارجية)</span><b>${u.ext.reduce((a,e)=>a+e.area,0).toFixed(2)} <small>م²</small></b></div>`:''}
     </div>
     <h3>جدول مساحات الفراغات <span>م²</span></h3>
@@ -824,9 +824,9 @@ async function buildSheet(u){
   c.direction='ltr'; c.font=F('700',8,DF); const pv=fmt(u.price); const pvw=c.measureText(pv).width/K; txt(pv,sx-5,y+17,F('700',8,DF),pc,'right');
   if(res){c.fillStyle='#b4362b';c.fillRect((sx-5-pvw)*K,(y+14.6)*K,pvw*K,.5*K)}
   c.direction='rtl'; txt('ريال',sx-7-pvw,y+17,F('500',3.4),pc);
-  txt(`سعر المتر (مساحة الشقة): ${fmt(Math.round(u.price/u.sale))} ريال`,sx-5,y+22.5,F('400',2.8),pc);
+  txt(`سعر المتر (المساحة البيعية): ${fmt(Math.round(u.price/u.sale))} ريال`,sx-5,y+22.5,F('400',2.8),pc);
   y+=30;
-  const tiles=[[u.beds,'غرف النوم'],[u.baths,'دورات المياه'],[fa(u.tot)+' م²','المساحة الإجمالية'],[u.sale.toFixed(2)+' م²','مساحة الشقة']];
+  const tiles=[[u.beds,'غرف النوم'],[u.baths,'دورات المياه'],[fa(u.tot)+' م²','المساحة الإجمالية'],[u.sale.toFixed(2)+' م²','المساحة البيعية']];
   tiles.forEach((tl,i)=>{const tx=sx-(i%2)*(sw/2+1),ty=y+Math.floor(i/2)*15,tw=sw/2-1;
     c.strokeStyle=LN;c.lineWidth=.3*K;rr(c,(tx-tw)*K,ty*K,tw*K,13*K,2*K);c.stroke();
     txt(String(tl[0]),tx-4,ty+6.5,F('600',4.6,DF),INK);txt(tl[1],tx-4,ty+10.8,F('400',2.7),MU)});
