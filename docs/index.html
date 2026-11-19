@@ -605,7 +605,7 @@ const tip=$('#tip');
 function tipHTML(u){const r=isRes(u.code);return `<div class="t1"><b>${u.name}</b><span>${FN[u.floor]} · ${bnOf(u)}</span></div>
   ${stReady?`<div style="margin-top:8px"><span class="st ${r?'rs':'av'}">${r?'محجوزة':'متاحة'}</span></div>`:''}
   <div class="pr num" ${r?'style="text-decoration:line-through;opacity:.6"':''}>${fmt(u.price)}<small>ريال</small></div>
-  <dl class="num"><dt>غرف النوم</dt><dd>${u.beds}</dd><dt>دورات المياه</dt><dd>${u.baths}</dd><dt>مساحة الوحدة</dt><dd>${ar(u.sale)} م²</dd>${u.priv!=null?`<dt>مساحة الأجزاء الخاصة</dt><dd>${ar(u.priv)} م²</dd>`:''}${u.total?`<dt>المساحة الإجمالية</dt><dd>${ar(u.total)} م²</dd>`:''}</dl>
+  <dl class="num"><dt>غرف النوم</dt><dd>${u.beds}</dd><dt>دورات المياه</dt><dd>${u.baths}</dd><dt>مساحة الوحدة</dt><dd>${ar(u.sale)} م²</dd>${u.priv!=null?`<dt>مساحة الأجزاء الخاصة</dt><dd>${ar(u.priv)} م²</dd>`:u.parkArea!=null?`<dt>مساحة الموقف</dt><dd>${ar(u.parkArea)} م²</dd>`:''}${u.total?`<dt>المساحة الإجمالية</dt><dd>${ar(u.total)} م²</dd>`:''}</dl>
   <div class="go">${editing?'اضغط لتغيير الحالة':'اضغط لفتح المخطط ←'}</div>`}
 canvas.addEventListener('pointermove',e=>{
   const g=e.target.closest('.u'); if(!g||e.pointerType==='touch'){tip.classList.remove('on');return}
@@ -678,7 +678,7 @@ function fillUnit(u,dir){
       <div class="tile"><b>${u.beds}</b><span>غرف النوم</span></div>
       <div class="tile"><b>${u.baths}</b><span>دورات المياه</span></div>
       <div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>مساحة الوحدة</span><b>${ar(u.sale)} <small>م²</small></b></div>
-      ${u.priv!=null?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>مساحة الأجزاء الخاصة</span><b>${ar(u.priv)} <small>م²</small></b></div>`:''}
+      ${u.priv!=null?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>مساحة الأجزاء الخاصة</span><b>${ar(u.priv)} <small>م²</small></b></div>`:u.parkArea!=null?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>مساحة الموقف</span><b>${ar(u.parkArea)} <small>م²</small></b></div>`:''}
       ${u.total?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>المساحة الإجمالية</span><b>${ar(u.total)} <small>م²</small></b></div>`:''}
       ${u.park?`<div class="tile" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span>الموقف</span><b style="font-size:17px">${parkTxt(u)}</b></div>`:''}
     </div>
@@ -852,7 +852,7 @@ async function buildSheet(u){
     c.strokeStyle=LN;c.lineWidth=.3*K;rr(c,(tx-tw)*K,ty*K,tw*K,13*K,2*K);c.stroke();
     txt(String(tl[0]),tx-4,ty+6.5,F('600',4.6,DF),INK);txt(tl[1],tx-4,ty+10.8,F('400',2.7),MU)});
   y+=15;
-  const arows=[['مساحة الوحدة',ar(u.sale)],...(u.priv!=null?[['مساحة الأجزاء الخاصة',ar(u.priv)]]:[]),...(u.total?[['المساحة الإجمالية',ar(u.total)]]:[])];
+  const arows=[['مساحة الوحدة',ar(u.sale)],...(u.priv!=null?[['مساحة الأجزاء الخاصة',ar(u.priv)]]:u.parkArea!=null?[['مساحة الموقف',ar(u.parkArea)]]:[]),...(u.total?[['المساحة الإجمالية',ar(u.total)]]:[])];
   arows.forEach(([l,v],i)=>{const ty=y+i*9;c.strokeStyle=LN;c.lineWidth=.3*K;rr(c,s0*K,ty*K,sw*K,8*K,2*K);c.stroke();
     txt(l,sx-4,ty+5.3,F('400',3),MU);c.direction='ltr';c.font=F('400',2.8);const uw=c.measureText('م²').width/K;txt('م²',s0+4,ty+5.5,F('400',2.8),MU,'left');txt(v,s0+5.2+uw,ty+5.5,F('600',3.8,DF),INK,'left');c.direction='rtl'});
   y+=arows.length*9+3;
