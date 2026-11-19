@@ -540,7 +540,13 @@ function setVB(v){curVB=v;
   let [x,y,w,h]=v; if(W/H>w/h){const nw=h*W/H;x-=(nw-w)/2;w=nw}else{const nh=w*H/W;y-=(nh-h)/2;h=nh}
   svg.style.height=H+'px';
   svg.setAttribute('viewBox',[x,y,w,h].map(n=>n.toFixed(2)).join(' '));}
-function markBld(){const b=state.bld;svg.querySelectorAll('.u,.lb').forEach(g=>g.classList.toggle('off',b>=0&&BY[g.dataset.code].bn!==HV[b]));}
+function markBld(){const b=state.bld;svg.querySelectorAll('.u,.lb').forEach(g=>g.classList.toggle('off',b>=0&&BY[g.dataset.code].bn!==HV[b]));updCounts();}
+const inBld=u=>state.bld<0||u.bn===HV[state.bld];
+function updCounts(){
+  $('#floorSeg').querySelectorAll('button').forEach(bt=>{const s=bt.querySelector('small');if(s)s.textContent=U.filter(u=>u.floor===bt.dataset.v&&inBld(u)).length});
+  if(typeof setFloorSeg==='function')setFloorSeg(state.floor,true);
+  if(typeof applyStatus==='function'&&svg)applyStatus();
+}
 const AISLE={G:{w:26,gap:3,t:'ممر بعرض 10 متر'}};
 function aisle(f){const a=AISLE[f];if(!a)return '';const v=F[f].vb,x=v[0]+v[2]+a.gap,y=v[1],hh=v[3];
   return `<g class="aisle" aria-label="${a.t}"><rect x="${x}" y="${y}" width="${a.w}" height="${hh}" rx="3" fill="rgba(196,154,98,.07)" stroke="#c49a62" stroke-opacity=".55" stroke-width=".8" stroke-dasharray="4 3"/>`+
@@ -594,7 +600,7 @@ function applyStatus(){
     svg.querySelectorAll('.lb .p').forEach(t=>{const r=isRes(t.parentNode.parentNode.dataset.code);t.textContent=r?'محجوزة':t.dataset.p;t.classList.toggle('rs',r)});
   }
   Object.values(cardEls).forEach(c=>{const r=isRes(c.dataset.code);c.classList.toggle('res',r);const p=c.querySelector('.st');p.className='st '+(r?'rs':'av');p.textContent=r?'محجوزة':'متاحة';p.hidden=!stReady});
-  const n=U.filter(u=>u.floor===state.floor);
+  const n=U.filter(u=>u.floor===state.floor&&inBld(u));
   $('#stSub').textContent=stReady?`${n.filter(u=>!isRes(u.code)).length} متاحة من ${n.length}`:`${n.length} شقة`;
   renderStats();
   if(openState&&cur) renderUvStatus();
